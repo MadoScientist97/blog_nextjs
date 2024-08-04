@@ -1,16 +1,19 @@
-FROM ubuntu:noble
+ARG NODE_VERSION=18
+ARG ALPINE_VERSION=latest
 
-USER root
-RUN apt update && apt upgrade -y
-RUN apt install -y curl git
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt install -y nodejs
+FROM node:${NODE_VERSION}-alpine AS node
+
+FROM alpine:${ALPINE_VERSION}
+
+COPY --from=node /usr/lib /usr/lib
+COPY --from=node /usr/local/lib /usr/local/lib
+COPY --from=node /usr/local/include /usr/local/include
+COPY --from=node /usr/local/bin /usr/local/bin
 
 RUN mkdir /blog
-
 WORKDIR /blog
 
-RUN npm install -g yarn
+RUN npm install -g yarn --force
 RUN yarn add next react react-dom nextra nextra-theme-blog
 
 COPY next.config.js next.config.js
